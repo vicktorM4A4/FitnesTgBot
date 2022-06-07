@@ -1,57 +1,45 @@
-#  Copyright (c) ChernV (@otter18), 2021.
+import logging
+from aiogram import Bot,Dispatcher,executor,types
+import markups as nav
 
-import os
-import random
+TOKEN = "5371079297:AAEDAM6GAUdziVQiGeUWoAB2MDSHBlJRwyI"
 
-from setup import bot, logger
-from webhook import app
+logging.basicConfig(level=logging.INFO)
 
-# --------------- dialog params -------------------
-dialog = {
-    'hello': {
-        'in': ['привет', 'hello', 'hi', 'privet', 'hey'],
-        'out': ['Приветствую', 'Здравствуйте', 'Привет!']
-    },
-    'how r u': {
-        'in': ['как дела', 'как ты', 'how are you', 'дела', 'how is it going'],
-        'out': ['Хорошо', 'Отлично', 'Good. And how are u?']
-    },
-    'name': {
-        'in': ['зовут', 'name', 'имя'],
-        'out': [
-            'Я telegram-template-bot',
-            'Я бот шаблон, но ты можешь звать меня в свой проект',
-            'Это секрет. Используй команду /help, чтобы узнать'
-        ]
-    }
-}
+bot = Bot(token=TOKEN)
+dp = Dispatcher(bot)
 
 
-# --------------- bot -------------------
-@bot.message_handler(commands=['help', 'start'])
-def say_welcome(message):
-    logger.info(f'</code>@{message.from_user.username}<code> ({message.chat.id}) used /start or /help')
-    bot.send_message(
-        message.chat.id,
-        '<b>Hello! This is a telegram bot template written by <a href="https://github.com/otter18">otter18</a></b>',
-        parse_mode='html'
-    )
+@dp.message_handler(commands=['start'])
+async def command_start(message: types.Message):
+     await bot.send_message(message.from_user.id, 'Добро пожаловать {0.first_name}'.format(message.from_user),reply_markup = nav.mainMenu)
 
 
-@bot.message_handler(func=lambda message: True)
-def echo(message):
-    for t, resp in dialog.items():
-        if sum([e in message.text.lower() for e in resp['in']]):
-            logger.info(f'</code>@{message.from_user.username}<code> ({message.chat.id}) used {t}:\n\n%s', message.text)
-            bot.send_message(message.chat.id, random.choice(resp['out']))
-            return
+@dp.message_handler()
+async def   bot_message(message:types.Message):
+    if message.text == 'Личный кабинет':
+        await bot.send_message(message.from_user.id, 'https://olimpiyasport.ru/#fitnesskit_personal',reply_markup=nav.mainMenu)
 
-    logger.info(f'</code>@{message.from_user.username}<code> ({message.chat.id}) used echo:\n\n%s', message.text)
-    bot.send_message(message.chat.id, message.text)
+    elif message.text == 'Купить абонемент':
+        await bot.send_message(message.from_user.id, 'Купить абонемент',)
+
+    elif message.text == 'Наши услуги':
+        await bot.send_message(message.from_user.id, 'Здесь услуги с сайта выведутся',)
+
+    elif message.text == 'Записатсья на тренировку':
+        await bot.send_message(message.from_user.id, 'линк с базой на тренировку',)
+
+    elif message.text == 'Другое':
+        await bot.send_message(message.from_user.id, 'Наши контакты:',reply_markup=nav.otherMenu)
+
+    elif message.text == 'Главное меню':
+        await bot.send_message(message.from_user.id, ' Возврат ',reply_markup=nav.mainMenu)
+    elif  message.text =='Информация':
+        await bot.send_message(message.from_user.id, ' здесь высрется информация ')
+    elif  message.text =='Адрес':
+        await bot.send_message(message.from_user.id, ' здесь высрется Адрес ')
+            
 
 
-if __name__ == '__main__':
-    if os.environ.get("IS_PRODUCTION", "False") == "True":
-        app.run()
-    else:
-        bot.infinity_polling()
+if __name__ == "__main__":
+    executor.start_polling(dp, skip_updates=True)
